@@ -6,4 +6,4 @@
     * De Grazia, Federico:  1465065
     * García, Lautaro:      1468923
 * Responsable del grupo:
-    * De Grazia, Pablo:     dgraziafm@gmail.com
+    * De Grazia, Federico:     dgraziafm@gmail.com
