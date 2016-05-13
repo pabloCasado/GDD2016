@@ -111,9 +111,6 @@ IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.baja_rol
 GO
 
-IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)  
-	DROP PROCEDURE HARDCOR.loggin
-GO
 
  if exists (select SCHEMA_NAME from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME = 'HARDCOR')
  drop schema HARDCOR 
@@ -720,52 +717,47 @@ IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.loggin
 GO
 
-CREATE PROCEDURE HARDCOR.loggin (@userName NVARCHAR(225), @password NVARCHAR(225))
-AS BEGIN
-	DECLARE @pw NVARCHAR(225)
-	DECLARE @intentos TINYINT
-	DECLARE @hash VARBINARY(225)
-	
-	BEGIN TRY
-		SELECT @hash = HASHBYTES('SHA2_256', @password);
-		SELECT @pw = u.pass_word FROM HARDCOR.Usuario u WHERE u.username = @UserName AND u.habilitado = 1
-		
-		IF @pw = @hash
-		BEGIN
-			PRINT 'acceso correcto'
-			UPDATE HARDCOR.Usuario SET intentos = 0 WHERE username = @userName
-		END
-	END TRY
-	
-	BEGIN CATCH
-		IF NOT EXISTS (SELECT * FROM HARDCOR.Usuario u WHERE u.username = @userName)
-		BEGIN 
-			PRINT 'el usuario no existe'
-			RETURN -1
-		END 
-		ELSE
-			IF 0 = (SELECT u.habilitado FROM HARDCOR.Usuario u WHERE u.username = @userName)
-			BEGIN	
-				PRINT 'el usuario esta inhabilitado'
-				RETURN -2
-			END
-			
-			IF @pw <> @hash
-			BEGIN
-				PRINT 'El usuario o contraseña es incorrecta'
-				UPDATE HARDCOR.Usuario SET intentos = intentos + 1 WHERE username = @userName
-				SELECT @intentos = u.intentos FROM HARDCOR.Usuario u WHERE u.username = @userName	
-				
-				IF @intentos = 3
-				BEGIN
-					UPDATE HARDCOR.Usuario SET habilitado = 0 WHERE username = @userName
-					UPDATE HARDCOR.Usuario SET intentos = 0 WHERE username = @userName
-				END
+CREATE PROCEDURE HARDCOR.loggin (@userName NVARCHAR(255), @password NVARCHAR(255)) AS BEGIN
+  /* Devuelve una fila por cada rol que el usuario posea con:
+    - Si el login fue exitoso o no (BIT)
+    - Código de rol (INT)
+    - Nombre de rol (NVARCHAR)
+    - Cantidad de intentos fallidos (INT)
+    - Si el usuario está habilitado o no (BIT)
+  */
+  DECLARE @ret BIT
+  DECLARE @cantidad_intentos_fallidos INT
 
-				RETURN -3
-			END
-	END CATCH
-		 
-	RETURN 1
+  SELECT @ret=COUNT(*), @cantidad_intentos_fallidos=MAX(intentos)
+    FROM HARDCOR.Usuario
+   WHERE username = @userName
+     AND pass_word = HASHBYTES('SHA2_256', @password)
+     AND habilitado = 1
+
+  IF @ret = 0 BEGIN
+    --Agrego un login fallido
+    UPDATE HARDCOR.Usuario
+       SET intentos = intentos + 1
+     WHERE username = @userName
+    --Deshabilito al usuario si ya tiene 3 logins fallidos
+    UPDATE HARDCOR.Usuario
+       SET habilitado = 0
+     WHERE username = @userName
+       AND intentos = 3
+  END
+  ELSE
+    UPDATE HARDCOR.Usuario
+       SET intentos = 0
+     WHERE username = @userName
+
+  --Devuelvo los roles asignados al usuario intentando loguearse
+  -- o nada, si el login no fue exitoso
+  SELECT @ret AS login_valido,
+         RxU.cod_rol, R.nombre,
+         U.habilitado, U.intentos
+    FROM HARDCOR.RolXus RxU, HARDCOR.ROl R, HARDCOR.Usuario U
+   WHERE RxU.cod_rol = R.cod_rol
+     AND U.username = @userName
+     AND U.cod_us = RxU.cod_us
 END
 GO
