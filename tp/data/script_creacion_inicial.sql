@@ -278,75 +278,65 @@ SELECT * INTO HARDCOR.Inconsistencias FROM gd_esquema.Maestra WHERE 1 = 2
 GO
 
 INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Administrador general', 1);
-GO
-
-INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Administrador', 1);
-GO
-
-INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Empresa', 1);
-GO
-
-INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Cliente', 1);
+VALUES ('Administrador general', 1),
+       ('Administrador', 1),
+       ('Empresa', 1),
+       ('Cliente', 1)
 GO
 
 INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Rol');
+VALUES ('ABM Rol'),
+       ('ABM Usuarios'),
+       ('ABM Rubro'),
+       ('ABM Visibilidad publicacion'),
+       ('Generar publicacion'),
+       ('Comprar/Ofertar'),
+       ('Historial cliente'),
+       ('Calificar vendedor'),
+       ('Consulta facturas realizadas al vendedor'),
+       ('Listado estadistico')
 GO
 
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Usuarios');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Rubro');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Visibilidad publicacion');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Generar publicacion');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Comprar/Ofertar');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Historial cliente');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Calificar vendedor');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Consulta factuaras realizadas al vendedor');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Listado estadistico');
-GO
-
+--El administrador general posee todas las funcionalidades
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 1, f.cod_fun FROM HARDCOR.Funcionalidad f
+SELECT 1, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
 GO
 
+/*El administrador común sólo tiene las funcionalidades
+  1. ABM Rol
+  2. ABM Usuarios
+  3. ABM Rubros
+  4. ABM Visibilidad publicacion
+  5. Consulta facturas realizadas al vendedor
+  6. Listado estadístico
+*/
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 2, f.cod_fun FROM HARDCOR.Funcionalidad f WHERE f.cod_fun < 5 OR f.cod_fun = 9 OR f.cod_fun = 10
+SELECT 2, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
+ WHERE f.cod_fun < 5
+    OR f.cod_fun = 9
+    OR f.cod_fun = 10
 GO
 
+--La empresa sólo puede generar publicaciones
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 3, f.cod_fun FROM HARDCOR.Funcionalidad f WHERE f.cod_fun = 5
+SELECT 3, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
+ WHERE f.cod_fun = 5
 GO
 
+/*El cliente tiene las siguientes funcionalidades:
+  1. Generar publicación
+  2. Comprar/Ofertar
+  3. Historial cliente
+  4. Calificar vendedor
+*/
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 4, f.cod_fun FROM HARDCOR.Funcionalidad f WHERE f.cod_fun > 4 AND f.cod_fun < 9
+SELECT 4, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
+ WHERE f.cod_fun > 4
+   AND f.cod_fun < 9
 GO
 
 INSERT INTO HARDCOR.Contacto(mail, cod_postal, dom_calle, nro_piso, nro_dpto, nro_calle) 
