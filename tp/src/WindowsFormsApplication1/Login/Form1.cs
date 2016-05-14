@@ -13,6 +13,12 @@ namespace WindowsFormsApplication1
             InitializeComponent();
         }
 
+        private void toggle_group_boxes()
+        {
+            this.groupBox1.Enabled = !this.groupBox1.Enabled;
+            this.groupBox2.Enabled = !this.groupBox2.Enabled;
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             var connection = new DBConnection().openConnection();
@@ -40,10 +46,37 @@ namespace WindowsFormsApplication1
                         MessageBox.Show(message, "Error al iniciar sesión", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         break;
                     }
-                    //Código a ejecutar si el login es válido <inserte aquí>
+                    if(!this.comboBox1.Items.Contains(reader["nombre"].ToString()))
+                    {
+                        this.comboBox1.Items.Add(reader["nombre"].ToString());
+                        this.comboBox1.DisplayMember = reader["nombre"].ToString();
+                        this.comboBox1.ValueMember = reader["cod_rol"].ToString();
+                    }
                 }
+
             reader.Close();
             connection.Close();
+
+            if (this.comboBox1.Items.Count > 1)
+                this.toggle_group_boxes();
+            else
+                ;//Hay un sólo rol
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if(this.comboBox1.SelectedIndex < 0)
+            {
+                MessageBox.Show("Debe seleccionar un rol");
+            }
+            //Hay varios roles pero ya eligieron uno
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            this.textBox1.Text = this.textBox2.Text = "";
+            this.comboBox1.Items.Clear();
+            this.toggle_group_boxes();
         }
     }
 }

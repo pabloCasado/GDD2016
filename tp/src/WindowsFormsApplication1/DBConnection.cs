@@ -1,7 +1,7 @@
 ﻿using System.Data.SqlClient;
 using System.Configuration;
 
-namespace WindowsFormsApplication1
+namespace WindowsFormsApplication1.Coneccion
 {
     class DBConnection
     {
