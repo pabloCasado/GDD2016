@@ -111,8 +111,8 @@ IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.baja_rol
 GO
 
-IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)
-	DROP PROCEDURE HARDCOR.loggin
+IF (OBJECT_ID ('HARDCOR.login') IS NOT NULL)
+	DROP PROCEDURE HARDCOR.login
 GO
 
 
@@ -704,7 +704,7 @@ END
 GO
 
 
-CREATE PROCEDURE HARDCOR.loggin (@userName NVARCHAR(255), @password VARCHAR(255)) AS BEGIN
+CREATE PROCEDURE HARDCOR.login (@userName NVARCHAR(255), @password VARCHAR(255)) AS BEGIN
   /* Devuelve una fila por cada rol que el usuario posea con:
     - Si el login fue exitoso o no (BIT)
     - Código de rol (INT)

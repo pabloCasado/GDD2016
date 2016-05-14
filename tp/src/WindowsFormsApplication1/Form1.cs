@@ -23,19 +23,33 @@ namespace WindowsFormsApplication1
         {
             var connection = new DBConnection().openConnection();
 
-            var command = new SqlCommand("HARDCOR.loggin", connection);
+            SqlCommand command = new SqlCommand("HARDCOR.login", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add(new SqlParameter("@username", this.textBox1.Text));
             command.Parameters.Add(new SqlParameter("@password", this.textBox2.Text));
-            var returnParameter = command.Parameters.Add("@ReturnVal", SqlDbType.Int);
-            returnParameter.Direction = ParameterDirection.ReturnValue;
-
             connection.Open();
-            command.ExecuteNonQuery();
-            connection.Close();
+            SqlDataReader reader = command.ExecuteReader();
+            if (!reader.HasRows)  // El usuario no existe
+                MessageBox.Show("El usuario " + this.textBox1.Text + " no está registrado en el sistema",
+                    "Error al iniciar sesión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else
+                while (reader.Read())
+                {
+                    if (!(bool)reader["login_valido"])
+                    {
+                        string message;
+                        if ((bool)reader["habilitado"])
+                            message = "La contraseña es incorrecta. Tiene " + (3 - (Int32.Parse(reader["intentos"].ToString()))) + " intentos disponibles";
+                        else
+                            message = "Su usuario ha sido bloqueado";
 
-            var result = returnParameter.Value;
-            Console.WriteLine(result);
+                        MessageBox.Show(message, "Error al iniciar sesión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    }
+                    //Código a ejecutar si el login es válido <inserte aquí>
+                }
+            reader.Close();
+            connection.Close();
         }
     }
 }
