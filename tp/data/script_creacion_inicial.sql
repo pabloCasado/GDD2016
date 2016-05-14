@@ -107,8 +107,12 @@ IF (OBJECT_ID ('HARDCOR.mod_rol') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.mod_rol
 GO
 
-IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)  
+IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.baja_rol
+GO
+
+IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)
+	DROP PROCEDURE HARDCOR.loggin
 GO
 
 
@@ -362,19 +366,15 @@ SELECT DISTINCT m.Publ_Empresa_Cuit, @hash, 1, 0
 FROM gd_esquema.Maestra m WHERE m.Publ_Empresa_Razon_Social IS NOT NULL ORDER BY m.Publ_Empresa_Cuit
 GO
 
-INSERT INTO HARDCOR.RolXus(cod_rol, cod_us) 
-SELECT 3, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select e.cod_us from HARDCOR.Empresa e)  
-GO
-
-INSERT INTO HARDCOR.RolXus(cod_rol, cod_us) 
-SELECT 4, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select c.cod_us from HARDCOR.Cliente c)  
-GO
-
 --Sacar getdate
 INSERT INTO HARDCOR.Cliente(cod_us, cod_contacto, cli_nombre, cli_apellido, cli_dni, cli_fecha_Nac, cli_fecha_creacion) 
 SELECT DISTINCT u.cod_us, c.cod_contacto, m.Cli_Nombre, m.Cli_Apeliido, m.Cli_Dni, m.Cli_Fecha_Nac, GETDATE()
 FROM gd_esquema.Maestra m, HARDCOR.Usuario u, HARDCOR.Contacto c 
 WHERE u.username = (SELECT CAST(m.Cli_Dni AS NVARCHAR(225))) AND c.mail = m.Cli_Mail 
+GO
+
+INSERT INTO HARDCOR.RolXus(cod_rol, cod_us)
+SELECT 4, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select c.cod_us from HARDCOR.Cliente c)
 GO
 
 INSERT INTO HARDCOR.Rubro(rubro_desc_corta, rubro_desc_larga) 
@@ -385,6 +385,10 @@ INSERT INTO HARDCOR.Empresa(cod_us, cod_contacto, emp_razon_soc, emp_fecha_craci
 SELECT DISTINCT u.cod_us, c.cod_contacto, m.Publ_Empresa_Razon_Social, m.Publ_Empresa_Fecha_Creacion, 
 				m.Publ_Empresa_Cuit FROM gd_esquema.Maestra m, HARDCOR.Usuario u, HARDCOR.Contacto c
 WHERE m.Publ_Empresa_Razon_Social = u.username AND c.mail = m.Publ_Empresa_Mail
+GO
+
+INSERT INTO HARDCOR.RolXus(cod_rol, cod_us)
+SELECT 3, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select e.cod_us from HARDCOR.Empresa e)
 GO
 
 INSERT INTO HARDCOR.RubroXempresa(cod_rubro, cod_emp) 
@@ -669,10 +673,6 @@ END
 GO
 
 
-IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)  
-	DROP PROCEDURE HARDCOR.baja_rol
-GO
-
 CREATE PROCEDURE HARDCOR.baja_rol (@rol NVARCHAR(225))
 AS BEGIN
   	DECLARE @cod_rol TINYINT
@@ -703,11 +703,8 @@ AS BEGIN
 END     
 GO
 
-IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)  
-	DROP PROCEDURE HARDCOR.loggin
-GO
 
-CREATE PROCEDURE HARDCOR.loggin (@userName NVARCHAR(255), @password NVARCHAR(255)) AS BEGIN
+CREATE PROCEDURE HARDCOR.loggin (@userName NVARCHAR(255), @password VARCHAR(255)) AS BEGIN
   /* Devuelve una fila por cada rol que el usuario posea con:
     - Si el login fue exitoso o no (BIT)
     - Código de rol (INT)
