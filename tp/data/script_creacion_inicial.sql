@@ -107,13 +107,14 @@ IF (OBJECT_ID ('HARDCOR.mod_rol') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.mod_rol
 GO
 
-IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)  
+IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)
 	DROP PROCEDURE HARDCOR.baja_rol
 GO
 
-IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)  
-	DROP PROCEDURE HARDCOR.loggin
+IF (OBJECT_ID ('HARDCOR.login') IS NOT NULL)
+	DROP PROCEDURE HARDCOR.login
 GO
+
 
  if exists (select SCHEMA_NAME from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME = 'HARDCOR')
  drop schema HARDCOR 
@@ -281,75 +282,65 @@ SELECT * INTO HARDCOR.Inconsistencias FROM gd_esquema.Maestra WHERE 1 = 2
 GO
 
 INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Administrador general', 1);
-GO
-
-INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Administrador', 1);
-GO
-
-INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Empresa', 1);
-GO
-
-INSERT INTO HARDCOR.Rol (nombre, habilitado) 
-VALUES ('Cliente', 1);
+VALUES ('Administrador general', 1),
+       ('Administrador', 1),
+       ('Empresa', 1),
+       ('Cliente', 1)
 GO
 
 INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Rol');
+VALUES ('ABM Rol'),
+       ('ABM Usuarios'),
+       ('ABM Rubro'),
+       ('ABM Visibilidad publicacion'),
+       ('Generar publicacion'),
+       ('Comprar/Ofertar'),
+       ('Historial cliente'),
+       ('Calificar vendedor'),
+       ('Consulta facturas realizadas al vendedor'),
+       ('Listado estadistico')
 GO
 
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Usuarios');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Rubro');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('ABM Visibilidad publicacion');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Generar publicacion');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Comprar/Ofertar');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Historial cliente');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Calificar vendedor');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Consulta factuaras realizadas al vendedor');
-GO
-
-INSERT INTO HARDCOR.Funcionalidad(descripcion) 
-VALUES ('Listado estadistico');
-GO
-
+--El administrador general posee todas las funcionalidades
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 1, f.cod_fun FROM HARDCOR.Funcionalidad f
+SELECT 1, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
 GO
 
+/*El administrador común sólo tiene las funcionalidades
+  1. ABM Rol
+  2. ABM Usuarios
+  3. ABM Rubros
+  4. ABM Visibilidad publicacion
+  5. Consulta facturas realizadas al vendedor
+  6. Listado estadístico
+*/
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 2, f.cod_fun FROM HARDCOR.Funcionalidad f WHERE f.cod_fun < 5 OR f.cod_fun = 9 OR f.cod_fun = 10
+SELECT 2, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
+ WHERE f.cod_fun < 5
+    OR f.cod_fun = 9
+    OR f.cod_fun = 10
 GO
 
+--La empresa sólo puede generar publicaciones
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 3, f.cod_fun FROM HARDCOR.Funcionalidad f WHERE f.cod_fun = 5
+SELECT 3, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
+ WHERE f.cod_fun = 5
 GO
 
+/*El cliente tiene las siguientes funcionalidades:
+  1. Generar publicación
+  2. Comprar/Ofertar
+  3. Historial cliente
+  4. Calificar vendedor
+*/
 INSERT INTO HARDCOR.RolXfunc(cod_rol, cod_fun) 
-SELECT 4, f.cod_fun FROM HARDCOR.Funcionalidad f WHERE f.cod_fun > 4 AND f.cod_fun < 9
+SELECT 4, f.cod_fun
+  FROM HARDCOR.Funcionalidad f
+ WHERE f.cod_fun > 4
+   AND f.cod_fun < 9
 GO
 
 INSERT INTO HARDCOR.Contacto(mail, cod_postal, dom_calle, nro_piso, nro_dpto, nro_calle) 
@@ -375,19 +366,15 @@ SELECT DISTINCT m.Publ_Empresa_Cuit, @hash, 1, 0
 FROM gd_esquema.Maestra m WHERE m.Publ_Empresa_Razon_Social IS NOT NULL ORDER BY m.Publ_Empresa_Cuit
 GO
 
-INSERT INTO HARDCOR.RolXus(cod_rol, cod_us) 
-SELECT 3, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select e.cod_us from HARDCOR.Empresa e)  
-GO
-
-INSERT INTO HARDCOR.RolXus(cod_rol, cod_us) 
-SELECT 4, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select c.cod_us from HARDCOR.Cliente c)  
-GO
-
 --Sacar getdate
 INSERT INTO HARDCOR.Cliente(cod_us, cod_contacto, cli_nombre, cli_apellido, cli_dni, cli_fecha_Nac, cli_fecha_creacion) 
 SELECT DISTINCT u.cod_us, c.cod_contacto, m.Cli_Nombre, m.Cli_Apeliido, m.Cli_Dni, m.Cli_Fecha_Nac, GETDATE()
 FROM gd_esquema.Maestra m, HARDCOR.Usuario u, HARDCOR.Contacto c 
 WHERE u.username = (SELECT CAST(m.Cli_Dni AS NVARCHAR(225))) AND c.mail = m.Cli_Mail 
+GO
+
+INSERT INTO HARDCOR.RolXus(cod_rol, cod_us)
+SELECT 4, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select c.cod_us from HARDCOR.Cliente c)
 GO
 
 INSERT INTO HARDCOR.Rubro(rubro_desc_corta, rubro_desc_larga) 
@@ -398,6 +385,10 @@ INSERT INTO HARDCOR.Empresa(cod_us, cod_contacto, emp_razon_soc, emp_fecha_craci
 SELECT DISTINCT u.cod_us, c.cod_contacto, m.Publ_Empresa_Razon_Social, m.Publ_Empresa_Fecha_Creacion, 
 				m.Publ_Empresa_Cuit FROM gd_esquema.Maestra m, HARDCOR.Usuario u, HARDCOR.Contacto c
 WHERE m.Publ_Empresa_Razon_Social = u.username AND c.mail = m.Publ_Empresa_Mail
+GO
+
+INSERT INTO HARDCOR.RolXus(cod_rol, cod_us)
+SELECT 3, u.cod_us FROM HARDCOR.Usuario u WHERE u.cod_us IN (select e.cod_us from HARDCOR.Empresa e)
 GO
 
 INSERT INTO HARDCOR.RubroXempresa(cod_rubro, cod_emp) 
@@ -682,10 +673,6 @@ END
 GO
 
 
-IF (OBJECT_ID ('HARDCOR.baja_rol') IS NOT NULL)  
-	DROP PROCEDURE HARDCOR.baja_rol
-GO
-
 CREATE PROCEDURE HARDCOR.baja_rol (@rol NVARCHAR(225))
 AS BEGIN
   	DECLARE @cod_rol TINYINT
@@ -716,56 +703,48 @@ AS BEGIN
 END     
 GO
 
-IF (OBJECT_ID ('HARDCOR.loggin') IS NOT NULL)  
-	DROP PROCEDURE HARDCOR.loggin
-GO
 
-CREATE PROCEDURE HARDCOR.loggin (@userName NVARCHAR(225), @password NVARCHAR(225))
-AS BEGIN
-	DECLARE @pw NVARCHAR(225)
-	DECLARE @intentos TINYINT
-	DECLARE @hash VARBINARY(225)
-	
-	BEGIN TRY
-		SELECT @hash = HASHBYTES('SHA2_256', @password);
-		SELECT @pw = u.pass_word FROM HARDCOR.Usuario u WHERE u.username = @UserName AND u.habilitado = 1
-		
-		IF @pw = @hash
-		BEGIN
-			PRINT 'acceso correcto'
-			UPDATE HARDCOR.Usuario SET intentos = 0 WHERE username = @userName
-		END
-	END TRY
-	
-	BEGIN CATCH
-		IF NOT EXISTS (SELECT * FROM HARDCOR.Usuario u WHERE u.username = @userName)
-		BEGIN 
-			PRINT 'el usuario no existe'
-			RETURN -1
-		END 
-		ELSE
-			IF 0 = (SELECT u.habilitado FROM HARDCOR.Usuario u WHERE u.username = @userName)
-			BEGIN	
-				PRINT 'el usuario esta inhabilitado'
-				RETURN -2
-			END
-			
-			IF @pw <> @hash
-			BEGIN
-				PRINT 'El usuario o contraseña es incorrecta'
-				UPDATE HARDCOR.Usuario SET intentos = intentos + 1 WHERE username = @userName
-				SELECT @intentos = u.intentos FROM HARDCOR.Usuario u WHERE u.username = @userName	
-				
-				IF @intentos = 3
-				BEGIN
-					UPDATE HARDCOR.Usuario SET habilitado = 0 WHERE username = @userName
-					UPDATE HARDCOR.Usuario SET intentos = 0 WHERE username = @userName
-				END
+CREATE PROCEDURE HARDCOR.login (@userName NVARCHAR(255), @password VARCHAR(255)) AS BEGIN
+  /* Devuelve una fila por cada rol que el usuario posea con:
+    - Si el login fue exitoso o no (BIT)
+    - Código de rol (INT)
+    - Nombre de rol (NVARCHAR)
+    - Cantidad de intentos fallidos (INT)
+    - Si el usuario está habilitado o no (BIT)
+  */
+  DECLARE @ret BIT
+  DECLARE @cantidad_intentos_fallidos INT
 
-				RETURN -3
-			END
-	END CATCH
-		 
-	RETURN 1
+  SELECT @ret=COUNT(*), @cantidad_intentos_fallidos=MAX(intentos)
+    FROM HARDCOR.Usuario
+   WHERE username = @userName
+     AND pass_word = HASHBYTES('SHA2_256', @password)
+     AND habilitado = 1
+
+  IF @ret = 0 BEGIN
+    --Agrego un login fallido
+    UPDATE HARDCOR.Usuario
+       SET intentos = intentos + 1
+     WHERE username = @userName
+    --Deshabilito al usuario si ya tiene 3 logins fallidos
+    UPDATE HARDCOR.Usuario
+       SET habilitado = 0
+     WHERE username = @userName
+       AND intentos = 3
+  END
+  ELSE
+    UPDATE HARDCOR.Usuario
+       SET intentos = 0
+     WHERE username = @userName
+
+  --Devuelvo los roles asignados al usuario intentando loguearse
+  -- o nada, si el login no fue exitoso
+  SELECT @ret AS login_valido,
+         RxU.cod_rol, R.nombre,
+         U.habilitado, U.intentos
+    FROM HARDCOR.RolXus RxU, HARDCOR.ROl R, HARDCOR.Usuario U
+   WHERE RxU.cod_rol = R.cod_rol
+     AND U.username = @userName
+     AND U.cod_us = RxU.cod_us
 END
 GO

@@ -1,7 +1,7 @@
 ﻿using System.Data.SqlClient;
 using System.Configuration;
 
-namespace WindowsFormsApplication1
+namespace WindowsFormsApplication1.Coneccion
 {
     class DBConnection
     {
@@ -12,7 +12,7 @@ namespace WindowsFormsApplication1
         public SqlConnection openConnection()
         {
             SqlConnection con = new SqlConnection();
-            con.ConnectionString = "SERVER=" + server + "\\SQLSERVER2012;DATABASE=GD2C2015;UID=" + user + ";PASSWORD=" + password + ";";
+            con.ConnectionString = "SERVER=" + server + "\\SQLSERVER2102;DATABASE=GD1C2016;UID=" + user + ";PASSWORD=" + password + ";";
             return con;
         }
     }

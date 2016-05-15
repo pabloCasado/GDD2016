@@ -6,7 +6,7 @@ TP de Gestión de datos UTN FRBA 2016
 La carpeta 'tp' imita la estructura que debe tener el zip que hay que
 enviar
 
-⇒ Readme.txt
-⇒ Estrategia.pdf
-⇒ \src (Solución entera de Visual Studio de “VentaEnvioDesktop”)
-⇒ \data (Archivo de script de base de datos)
+* Readme.txt
+* Estrategia.pdf
+* /src (Solución entera de Visual Studio de "VentaEnvioDesktop")
+* /data (Archivo de script de base de datos)
